@@ -12,8 +12,7 @@ However, with a few pre-processing steps, SweiNet can be applied to other datase
 
 See the example notebook `Example.ipynb` to get started with these two examples:
 
-<img src="./images/example1.png" width="50%">
-<img src="./images/example2.png" width="50%">
+<img src="./images/example1.png" width="40%"><img src="./images/example2.png" width="40%">
 
 ## Citation
 ```bibtex
