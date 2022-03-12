@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 from numpy.fft import fft2, ifft2
-from scipy.io import loadmat, savemat
 from scipy.interpolate import interp2d
+from scipy.io import loadmat, savemat
 from scipy.signal import hilbert
 default_sws = 2.1
 default_shape = (16, 100)
@@ -48,7 +48,7 @@ def preprocess_data(t, x, displ, phase_shift=False, expected_sws=None):
         t: time vector
         x: space vector
         displ: a single (2D) or stack (3D) of spacetime planes
-        phase_shift: changes velocity data to a displacement appreance.
+        phase_shift: converts velocity data to displacement-like appearance.
             Default is False.
         expected_sws: optional, if known, adjusts scaling to compensate
     """
@@ -62,66 +62,46 @@ def preprocess_data(t, x, displ, phase_shift=False, expected_sws=None):
     if len(t) != displ.shape[2]:
         raise ValueError('t shape does not match displ')
 
-    # Use phase shift to convert velocity to "displacement-like"
     if phase_shift:
         displ = hilbert(displ).imag
 
-    # Resize latmm to default x size
+    # Resize spatial to default x size
     xsize = default_shape[0]
-    if len(x) < xsize:
-        x = cv2.resize(x[None], (xsize+2, 1))[0, 1:-1]
-        displ = np.stack([
-            cv2.resize(d, (d.shape[1], xsize+2))[1:-1]
-            for d in displ
-        ])
-    elif len(x) > xsize:
+    if len(x) > xsize:
         x = cv2.resize(x[None], (xsize, 1))[0]
-        displ = np.stack([
-            cv2.resize(d, (d.shape[1], xsize))
-            for d in displ
-        ])
+        displ = np.stack([cv2.resize(d, (d.shape[1], xsize)) for d in displ])
+    elif len(x) < xsize:
+        x = cv2.resize(x[None], (xsize+2, 1))[0, 1:-1]
+        displ = np.stack([cv2.resize(d, (d.shape[1], xsize+2))[1:-1] for d in displ])
 
     dx = np.mean(np.diff(x))
     dt = np.mean(np.diff(t))
     dxdt = dx / dt
 
-    # Resize tms to achieve target dxdt
+    # Resize temporal to achieve target dxdt
     if expected_sws is None:
         tsize = default_shape[1]
     else:
         tsize = round(len(t) * default_dxdt/dxdt * expected_sws/default_sws)
     if len(t) > tsize:
         t = cv2.resize(t[None], (tsize, 1))[0]
-        displ = np.stack([
-            cv2.resize(d, (tsize, d.shape[0]))
-            for d in displ
-        ])
+        displ = np.stack([cv2.resize(d, (tsize, d.shape[0])) for d in displ])
     elif len(t) < tsize:
         t = cv2.resize(t[None], (tsize+2, 1))[0, 1:-1]
-        displ = np.stack([
-            cv2.resize(d, (tsize+2, d.shape[0]))[:, 1:-1]
-            for d in displ
-        ])
+        displ = np.stack([cv2.resize(d, (tsize+2, d.shape[0]))[:, 1:-1] for d in displ])
+        
+    dt = np.mean(np.diff(t))
+    dxdt = dx / dt
 
-    # Pad/crop to default t size
+    # Pad or crop to default t size
     if tsize < default_shape[1]:
         # minimum padding becomes zeros after normalization
-        displ = np.pad(displ,
-                       ((0, 0), (0, 0), (0, default_shape[1] - tsize)),
-                       mode='minimum')
-        dt = np.mean(np.diff(t))
-        dxdt = dx / dt
-        # t = np.concatenate([
-        #     t,
-        #     (np.arange(default_shape[1] - tsize) + 1) * dt + t[-1]
-        # ])
+        displ = np.pad(displ, ((0,0), (0,0), (0,default_shape[1]-tsize)), mode='minimum')
     else:
-        t = t[:default_shape[1]]
         displ = displ[:, :, :default_shape[1]]
-        dt = np.mean(np.diff(t))
-        dxdt = dx / dt
 
-    # Normalize
+
+    # Normalize to [0, 1]
     displ -= np.min(displ, 2, keepdims=True)
     displ /= np.max(displ, 2, keepdims=True)
 
@@ -152,6 +132,6 @@ def make_sim_data_2():
     x_ = x / 5.0
     d = 0.1 * (2.75-x_) * np.cos(2*(t_-x_)) * np.exp(-.1*(t_-x_-0.5)**4)
     d += 0.15 - 0.05*t
-    noise = 0.03 * np.random.randn(len(x), len(t[0, ::51]))
+    noise = 0.03 * np.random.randn(len(x), len(t[0,::51]))
     d += interp2d(t[0,::51], x[:,0], noise, kind='cubic', bounds_error=False)(t[0], x[:,0])
     savemat('sim_data_2.mat', {'xMm': x, 'tMsec': t, 'displ': d})
