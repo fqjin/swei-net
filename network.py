@@ -1,5 +1,5 @@
 """
-Copyright 2021 Felix Q. Jin
+Copyright 2022 Felix Q. Jin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ class ResBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(in_c)
         self.conv2 = nn.Conv2d(in_c, out_c, 3, bias=False,
                                padding=1, stride=stride)
-
         downsample = []
         if stride != 1:
             downsample.append(nn.AvgPool2d(stride))
@@ -39,29 +38,25 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         identity = self.downsample(x)
-
         x = self.bn1(x)
         x = self.relu(x)
         x = self.conv1(x)
-
         x = self.bn2(x)
         x = self.relu(x)
         x = self.conv2(x)
-
         x += identity
         return x
-# TODO: Test BottleNeck Block
 
 
-class EASINet(nn.Module):
-    """ResNet for single EASI spacetime slice
-    Input shape: (16, 102)
+class SweiNet(nn.Module):
+    """A pre-activation ResNet for processing SWEI data
+    Input shape: (16, 100)
     Output shape: (out_c, 1)
     """
     def __init__(
         self,
-        out_c=1,
-        base_c=32,
+        out_c=2,
+        base_c=16,
         c_fact=(2, 4, 4),
     ):
         super().__init__()
@@ -95,7 +90,7 @@ class EASINet(nn.Module):
 
 if __name__ == '__main__':
     for m in [
-        EASINet(out_c=2, base_c=16, c_fact=(2, 4, 4)),  # 112210
+        SweiNet(out_c=2, base_c=16, c_fact=(2, 4, 4)),  # 112210
     ]:
         params = sum(p.numel() for p in m.parameters())
         print(params)
