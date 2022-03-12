@@ -15,6 +15,41 @@ limitations under the License.
 """
 import torch
 import torch.nn as nn
+weights = torch.load('SweiNet_weights.pt')
+
+
+def build_model(i):
+    """Constructs SweiNet and loads a set of weights"""
+    m = SweiNet(out_c=2, base_c=16, c_fact=(2, 4, 4))
+    m.load_state_dict(weights[i])
+    m.eval()
+    return m
+
+
+def get_model(use_ensemble):
+    """Builds the ensemble or single model"""
+    if use_ensemble:
+        model = [build_model(i) for i in range(1, 31) if i != 18]
+    else:
+        model = [build_model(0)]
+    return model
+
+
+def run_model(input_, model, device='cpu'):
+    """Run the model on preprocessed input
+    Returns an array of estimated (m, sigma) values
+    """
+    displ = torch.from_numpy(input_['displ']).float().to(device)
+    model = [m.to(device) for m in model]
+
+    with torch.no_grad():
+        z = [m(displ[:, None]) for m in model]
+        z = torch.mean(torch.stack(z), dim=0)
+
+    z[:, 0] = torch.exp(z[:, 0]) * input_['dxdt_factor']
+    z[:, 1] = torch.exp(z[:, 1] / 2)
+    z = z.cpu().numpy()
+    return z
 
 
 class ResBlock(nn.Module):
