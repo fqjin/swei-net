@@ -107,12 +107,6 @@ class SweiNet(nn.Module):
         self.pooled_c = 4 * c_fact[2] * base_c
         self.fc = nn.Linear(self.pooled_c, out_c, bias=True)
 
-        # Zero-initialize the last BN in each residual branch,
-        #   according to https://arxiv.org/abs/1706.02677
-        for m in self.modules():
-            if isinstance(m, ResBlock):
-                nn.init.constant_(m.bn2.weight, 0)
-
     def forward(self, x):  # 1 x 16 x 100
         x = self.conv1(x)  # c x 12 x 96
         x = self.block1(x)  # c x 6 x 48
