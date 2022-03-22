@@ -1,4 +1,4 @@
-# SweiNet
+# [SweiNet](https://arxiv.org/abs/2203.10678)
 **SweiNet is an uncertainty-quantifying shear wave speed (SWS) estimator for ultrasound shear wave elasticity (SWE) imaging.**
 
 <img src="./images/fig_Architecture.png">
@@ -17,6 +17,14 @@ Please see the notebook `Example.ipynb` to get started with these two examples:
 ## Citation
 If you find SweiNet useful, please consider citing the following manuscript:
 ```bibtex
+@misc{jin2022sweinet,
+      title={SweiNet: Deep Learning Based Uncertainty Quantification for Ultrasound Shear Wave Elasticity Imaging}, 
+      author={Felix Q. Jin and Lindsey C. Carlson and Helen Feltovich and Timothy J. Hall and Mark L. Palmeri},
+      year={2022},
+      eprint={2203.10678},
+      archivePrefix={arXiv},
+      primaryClass={eess.IV}
+}
 ```
 
 ## Funding
