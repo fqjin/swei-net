@@ -74,8 +74,8 @@ def preprocess_data(t, x, displ, phase_shift=False, expected_sws=None):
         x = cv2.resize(x[None], (xsize+2, 1))[0, 1:-1]
         displ = np.stack([cv2.resize(d, (d.shape[1], xsize+2))[1:-1] for d in displ])
 
-    dx = np.mean(np.diff(x))
-    dt = np.mean(np.diff(t))
+    dx = np.mean(np.diff(x)).item()
+    dt = np.mean(np.diff(t)).item()
     dxdt = dx / dt
 
     # Resize temporal to achieve target dxdt
